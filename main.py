@@ -14,8 +14,10 @@ def authorize_gdocs():
     google_oauth2_scopes = [
         "https://www.googleapis.com/auth/documents.readonly"
     ]
-    with open("token.pickle", 'rb') as token:
-        cred = pickle.load(token)
+    cred = None
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", 'rb') as token:
+            cred = pickle.load(token)
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
@@ -30,7 +32,7 @@ if __name__ == '__main__':
 
     authorize_gdocs()
     GoogleDocsReader = download_loader('GoogleDocsReader')
-    gdoc_ids = ['1ofZ96nWEZYCJsteRfqik_xNQTGFHtnc-7cYrf0dMPKQ']
+    gdoc_ids = ['1UuCLbWjE9nB0MQDd1Gk9DjN74Pny6Zwjp1W83q-CLiw']
     loader = GoogleDocsReader()
     documents = loader.load_data(document_ids=gdoc_ids)
     index = GPTSimpleVectorIndex(documents)
@@ -39,3 +41,7 @@ if __name__ == '__main__':
         prompt = input("Type prompt...")
         response = index.query(prompt)
         print(response)
+
+        # Get the last token usage
+        last_token_usage = index.llm_predictor.last_token_usage
+        print(f"last_token_usage={last_token_usage}")

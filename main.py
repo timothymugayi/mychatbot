@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 
@@ -5,9 +6,6 @@ from google.auth.transport.requests import Request
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from llama_index import GPTSimpleVectorIndex, download_loader
-
-
-os.environ['OPENAI_API_KEY'] = 'SET-YOUR-OPEN-AI-API-KEY'
 
 
 def authorize_gdocs():
@@ -28,15 +26,16 @@ def authorize_gdocs():
             pickle.dump(cred, token)
 
 
-if __name__ == '__main__':
-
+def load_index():
     authorize_gdocs()
     GoogleDocsReader = download_loader('GoogleDocsReader')
     gdoc_ids = ['1UuCLbWjE9nB0MQDd1Gk9DjN74Pny6Zwjp1W83q-CLiw']
     loader = GoogleDocsReader()
     documents = loader.load_data(document_ids=gdoc_ids)
-    index = GPTSimpleVectorIndex(documents)
+    return GPTSimpleVectorIndex(documents)
 
+
+def run_cli(index):
     while True:
         prompt = input("Type prompt...")
         response = index.query(prompt)
@@ -45,3 +44,23 @@ if __name__ == '__main__':
         # Get the last token usage
         last_token_usage = index.llm_predictor.last_token_usage
         print(f"last_token_usage={last_token_usage}")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--whatsapp",
+        action="store_true",
+        help="Run the WhatsApp Cloud API webhook instead of the interactive CLI.",
+    )
+    args = parser.parse_args()
+
+    index = load_index()
+    if args.whatsapp:
+        from whatsapp_webhook import create_app
+        from waitress import serve
+
+        app = create_app(index.query)
+        serve(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))
+    else:
+        run_cli(index)

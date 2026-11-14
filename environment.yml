@@ -15,6 +15,8 @@ dependencies:
   - xz=5.2.10=h6c40b1e_1
   - zlib=1.2.13=h4dc903c_0
   - pip:
+    - Flask==3.1.1
+    - waitress==3.0.2
     - aiohttp==3.8.4
     - aiosignal==1.3.1
     - async-timeout==4.0.2
